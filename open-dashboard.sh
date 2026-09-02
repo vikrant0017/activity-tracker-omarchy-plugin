@@ -26,7 +26,13 @@ install_runtime() {
     notify "Downloading Activity Tracker…"
     curl --fail --location --retry 3 --output "$cache_dir/$WHEEL" "$RELEASE_URL/$WHEEL"
     curl --fail --location --retry 3 --output "$cache_dir/$CHECKSUM" "$RELEASE_URL/$CHECKSUM"
-    (cd "$cache_dir" && sha256sum --check "$CHECKSUM")
+    expected_hash=$(awk '{print $1}' "$cache_dir/$CHECKSUM")
+    actual_hash=$(sha256sum "$cache_dir/$WHEEL" | awk '{print $1}')
+    if [ "$actual_hash" != "$expected_hash" ]; then
+      notify "Activity Tracker download failed checksum verification."
+      rm -f "$cache_dir/$WHEEL" "$cache_dir/$CHECKSUM"
+      exit 1
+    fi
   fi
 
   notify "Installing Activity Tracker…"
