@@ -22,17 +22,18 @@ install_runtime() {
   fi
 
   mkdir -p "$cache_dir"
-  if [ ! -f "$cache_dir/$WHEEL" ]; then
+  if [ ! -f "$cache_dir/$WHEEL" ] || [ ! -f "$cache_dir/$CHECKSUM" ]; then
     notify "Downloading Activity Tracker…"
     curl --fail --location --retry 3 --output "$cache_dir/$WHEEL" "$RELEASE_URL/$WHEEL"
     curl --fail --location --retry 3 --output "$cache_dir/$CHECKSUM" "$RELEASE_URL/$CHECKSUM"
-    expected_hash=$(awk '{print $1}' "$cache_dir/$CHECKSUM")
-    actual_hash=$(sha256sum "$cache_dir/$WHEEL" | awk '{print $1}')
-    if [ "$actual_hash" != "$expected_hash" ]; then
-      notify "Activity Tracker download failed checksum verification."
-      rm -f "$cache_dir/$WHEEL" "$cache_dir/$CHECKSUM"
-      exit 1
-    fi
+  fi
+
+  expected_hash=$(awk '{print $1}' "$cache_dir/$CHECKSUM")
+  actual_hash=$(sha256sum "$cache_dir/$WHEEL" | awk '{print $1}')
+  if [ "$actual_hash" != "$expected_hash" ]; then
+    notify "Activity Tracker download failed checksum verification."
+    rm -f "$cache_dir/$WHEEL" "$cache_dir/$CHECKSUM"
+    exit 1
   fi
 
   notify "Installing Activity Tracker…"
