@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="0.1.0"
+APP_VERSION="0.1.1"
 RELEASE_URL="https://github.com/vikrant0017/activity-tracker/releases/download/v${APP_VERSION}"
 WHEEL="activity_tracker-${APP_VERSION}-py3-none-any.whl"
 CHECKSUM="${WHEEL}.sha256"
