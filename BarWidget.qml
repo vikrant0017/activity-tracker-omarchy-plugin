@@ -11,6 +11,7 @@ BarWidget {
   property var topApps: []
   property string installationStatus: ""
   property bool setupInProgress: false
+  property bool dashboardAvailable: false
 
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
@@ -40,7 +41,9 @@ BarWidget {
   function startDashboard() {
     if (setupInProgress) return
     setupInProgress = true
-    installationStatus = "Installing Activity Tracker…"
+    installationStatus = dashboardAvailable
+      ? "Opening dashboard…"
+      : "Preparing Activity Tracker…"
     injectPanel()
     dashboardProcess.running = true
   }
@@ -77,11 +80,13 @@ BarWidget {
       var stats = JSON.parse(raw)
       activeTime = stats.active_time || "XX:XX"
       topApps = stats.top_apps || []
+      dashboardAvailable = true
       if (installationStatus === "Ready") installationStatus = ""
       injectPanel()
     } catch (error) {
       activeTime = "XX:XX"
       topApps = []
+      dashboardAvailable = false
       injectPanel()
     }
   }
