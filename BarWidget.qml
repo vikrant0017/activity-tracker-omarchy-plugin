@@ -29,6 +29,10 @@ BarWidget {
     if ("topApps" in panel) panel.topApps = root.topApps
   }
 
+  function pluginFilePath(name) {
+    return decodeURIComponent(String(Qt.resolvedUrl(name)).replace(/^file:\/\//, ""))
+  }
+
   function refresh() {
     if (!statsProcess.running) statsProcess.running = true
   }
@@ -98,7 +102,7 @@ BarWidget {
 
   Process {
     id: dashboardProcess
-    command: ["sh", Qt.resolvedUrl("open-dashboard.sh").toLocalFile()]
+    command: ["sh", root.pluginFilePath("open-dashboard.sh")]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.finishDashboardSetup(text)
