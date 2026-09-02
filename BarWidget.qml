@@ -9,6 +9,8 @@ BarWidget {
 
   property string activeTime: "XX:XX"
   property var topApps: []
+  property string installationStatus: ""
+  property bool setupInProgress: false
 
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
@@ -29,6 +31,25 @@ BarWidget {
 
   function refresh() {
     if (!statsProcess.running) statsProcess.running = true
+  }
+
+  function startDashboard() {
+    if (setupInProgress) return
+    setupInProgress = true
+    installationStatus = "Installing Activity Tracker…"
+    injectPanel()
+    dashboardProcess.running = true
+  }
+
+  function finishDashboardSetup(raw) {
+    setupInProgress = false
+    if (raw.indexOf("ACTIVITY_TRACKER_STATUS:READY") !== -1) {
+      installationStatus = "Ready"
+      refresh()
+    } else {
+      installationStatus = "Installation failed — retry"
+    }
+    injectPanel()
   }
 
   function open() {
@@ -52,6 +73,7 @@ BarWidget {
       var stats = JSON.parse(raw)
       activeTime = stats.active_time || "XX:XX"
       topApps = stats.top_apps || []
+      if (installationStatus === "Ready") installationStatus = ""
       injectPanel()
     } catch (error) {
       activeTime = "XX:XX"
@@ -71,6 +93,15 @@ BarWidget {
     onLoaded: {
       root.injectPanel()
       Qt.callLater(root.injectPanel)
+    }
+  }
+
+  Process {
+    id: dashboardProcess
+    command: ["sh", Qt.resolvedUrl("open-dashboard.sh").toLocalFile()]
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.finishDashboardSetup(text)
     }
   }
 
@@ -98,9 +129,9 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "󰃰 " + root.activeTime
+    text: root.installationStatus ? "󰃰 " + root.installationStatus : "󰃰 " + root.activeTime
     horizontalMargin: 8.5
-    tooltipText: "Activity tracker — click for usage details"
+    tooltipText: root.installationStatus || "Activity tracker — click for usage details"
 
     onPressed: function(mouseButton) {
       if (mouseButton === Qt.MiddleButton) root.refresh()

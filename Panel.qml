@@ -13,7 +13,7 @@ Panel {
   readonly property var barIdentity: hostWidget || root
   property string activeTime: "XX:XX"
   property var topApps: []
-  readonly property string dashboardCommand: "sh " + JSON.stringify(Qt.resolvedUrl("open-dashboard.sh").toLocalFile())
+
 
   function open() {
     if (hostWidget && hostWidget.refresh) hostWidget.refresh()
@@ -73,7 +73,9 @@ Panel {
               font.bold: true
             }
             Text {
-              text: "Active time  " + root.activeTime
+              text: root.hostWidget && root.hostWidget.installationStatus
+                ? root.hostWidget.installationStatus
+                : "Active time  " + root.activeTime
               color: Color.accent
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.body
@@ -149,7 +151,9 @@ Panel {
 
           Text {
             anchors.centerIn: parent
-            text: "Open dashboard"
+            text: root.hostWidget && root.hostWidget.setupInProgress
+              ? "Installing…"
+              : "Open dashboard"
             color: Color.background
             font.family: root.bar ? root.bar.fontFamily : Style.font.family
             font.pixelSize: Style.font.body
@@ -160,8 +164,7 @@ Panel {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-              if (root.bar) root.bar.run(root.dashboardCommand)
-              root.close()
+              if (root.hostWidget) root.hostWidget.startDashboard()
             }
           }
         }
